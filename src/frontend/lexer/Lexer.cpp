@@ -17,3 +17,9 @@ void Lexer::tokenize_number() {
         current_position++;
     }
 }
+
+void Lexer::skip_whitespaces() {
+    while (std::isspace(source_code.at(current_position))) {
+        
+    }
+}

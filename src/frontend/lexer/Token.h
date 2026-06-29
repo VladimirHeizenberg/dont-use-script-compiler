@@ -1,15 +1,12 @@
+#pragma once
+
 #include <string>
 
 #include "TokenType.h"
 
-struct TokenLocation {
-    int line;
-    int column;
-};
-
 class Token {
 public:
-    Token(std::string_view lexemme, TokenType t_type, TokenLocation t_location)
+    Token(std::string_view lexemme, TokenType t_type, size_t t_location)
     : raw_lexemme(lexemme)
     , type(t_type)
     , location(t_location) {}
@@ -22,12 +19,12 @@ public:
         return raw_lexemme;
     }
 
-    [[nodiscard]] TokenLocation get_location() const {
+    [[nodiscard]] size_t get_location() const {
         return location;
     }
 
 private:
     std::string_view raw_lexemme;
     TokenType type;
-    TokenLocation location;
+    size_t location;
 };

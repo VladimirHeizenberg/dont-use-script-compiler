@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <unordered_map>
 
@@ -13,6 +15,7 @@ public:
 
 private:
     void tokenize_number();
+    void skip_whitespaces();
 
     std::string_view source_code;
     size_t current_position;
