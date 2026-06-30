@@ -15,7 +15,13 @@ public:
 
 private:
     void tokenize_number();
-    void skip_whitespaces();
+    void tokenize_operator();
+
+    void add_token(TokenType type, std::string_view raw_str);
+    void add_token(TokenType type, std::string_view raw_str, size_t position);
+
+    bool is_number(char current);
+    bool is_operator(char current);
 
     std::string_view source_code;
     size_t current_position;

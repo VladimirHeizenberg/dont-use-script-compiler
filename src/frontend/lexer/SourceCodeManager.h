@@ -16,16 +16,31 @@ public:
         }
     }
 
-    size_t get_line_start(size_t index) {
-        auto it = std::lower_bound(line_starts.begin(), line_starts.end(), index);
-        if (*it == index) {
-            return index;
+    [[nodiscard]] std::string_view get_line_at(size_t offset) const {
+        if (offset >= source_code.size()) return {};
+
+        auto it = std::upper_bound(line_starts.begin(), line_starts.end(), offset);
+        auto current_line_start_it = std::prev(it);
+        
+        size_t start_pos = *current_line_start_it;
+        size_t end_pos;
+
+        if (it == line_starts.end()) {
+            end_pos = source_code.size();
+        } else {
+            end_pos = *it - 1;
         }
-        return *(it - 1);
+
+        if (end_pos > start_pos && source_code[end_pos - 1] == '\r') {
+            --end_pos;
+        }
+
+        return source_code.substr(start_pos, end_pos - start_pos);
     }
 
-    std::string_view get_line(std::vector<size_t>::iterator iterator) {
-        
+    [[nodiscard]] size_t get_line_number(size_t offset) const {
+        auto it = std::upper_bound(line_starts.begin(), line_starts.end(), offset);
+        return std::distance(line_starts.begin(), std::prev(it)) + 1;
     }
 
 private:
