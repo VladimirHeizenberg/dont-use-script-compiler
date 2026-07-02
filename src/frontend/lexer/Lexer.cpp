@@ -9,7 +9,8 @@ std::vector<Token> Lexer::tokenize() {
 
     while (current_position != source_code.size()) {
         char current = source_code.at(current_position);
-        if (is_number(current)) tokenize_number();
+        if (std::isspace(current)) current_position++;
+        else if (is_number(current)) tokenize_number();
         else if (is_operator(current)) tokenize_operator();
         else current_position++;
     }
