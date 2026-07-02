@@ -1,8 +1,12 @@
 #pragma once
 
 enum class TokenType {
-    Number,
-    Plus,
-    Minus,
-    Eof,
+    kNumber,
+    kPlus,
+    kMinus,
+    kAsteriks,
+    kSlash,
+    kLeftParenthesis,
+    kRightParenthesis,
+    kEof,
 };

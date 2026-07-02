@@ -3,51 +3,52 @@
 #include <vector>
 
 #include "Token.h"
+#include "LexerError.h"
 
-std::vector<Token> Lexer::tokenize() {
-    tokens.clear();
+std::vector<Token> Lexer::Tokenize() {
+    tokens_.clear();
 
-    while (current_position != source_code.size()) {
-        char current = source_code.at(current_position);
-        if (std::isspace(current)) current_position++;
-        else if (is_number(current)) tokenize_number();
-        else if (is_operator(current)) tokenize_operator();
-        else current_position++;
+    while (current_position_ != source_code_.size()) {
+        char current = source_code_.at(current_position_);
+        if (std::isspace(current)) current_position_++;
+        else if (IsNumber(current)) TokenizeNumber();
+        else if (IsOperator(current)) TokenizeOperator();
+        else throw LexerError("Unexpected token at " + std::to_string(current_position_), current_position_);
     }
 
-    add_token(TokenType::Eof, source_code.substr(current_position - 1, 1));
+    AddToken(TokenType::kEof, source_code_.substr(current_position_ - 1, 1));
 
-    return std::move(tokens);
+    return std::move(tokens_);
 }
 
 
-void Lexer::tokenize_number() {
-    size_t start_position = current_position;
-    while (current_position < source_code.size() && std::isdigit(source_code.at(current_position))) {
-        current_position++;
+void Lexer::TokenizeNumber() {
+    size_t start_position = current_position_;
+    while (current_position_ < source_code_.size() && std::isdigit(source_code_.at(current_position_))) {
+        current_position_++;
     }
-    std::string_view raw_number = source_code.substr(start_position, current_position - start_position);
-    add_token(TokenType::Number, raw_number, start_position);
+    std::string_view raw_number = source_code_.substr(start_position, current_position_ - start_position);
+    AddToken(TokenType::kNumber, raw_number, start_position);
 }
 
-void Lexer::tokenize_operator() {
-    char current = source_code.at(current_position);
-    add_token(operator_table.at(std::string{current}), source_code.substr(current_position, 1));
-    current_position++;
+void Lexer::TokenizeOperator() {
+    char current = source_code_.at(current_position_);
+    AddToken(kOperatorTable.at(std::string{current}), source_code_.substr(current_position_, 1));
+    current_position_++;
 }
 
-void Lexer::add_token(TokenType type, std::string_view raw_str) {
-    tokens.emplace_back(raw_str, type, current_position);
+void Lexer::AddToken(TokenType type, std::string_view raw_str) {
+    tokens_.emplace_back(raw_str, type, current_position_);
 }
 
-void Lexer::add_token(TokenType type, std::string_view raw_str, size_t position) {
-    tokens.emplace_back(raw_str, type, position);
+void Lexer::AddToken(TokenType type, std::string_view raw_str, size_t position) {
+    tokens_.emplace_back(raw_str, type, position);
 }
 
-bool Lexer::is_number(char current) {
+bool Lexer::IsNumber(char current) {
     return std::isdigit(current);
 }
 
-bool Lexer::is_operator(char current) {
-    return operator_table.contains(std::string{current});
+bool Lexer::IsOperator(char current) {
+    return kOperatorTable.contains(std::string{current});
 }

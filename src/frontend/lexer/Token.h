@@ -6,25 +6,25 @@
 
 class Token {
 public:
-    Token(std::string_view lexemme, TokenType t_type, size_t t_location)
-    : raw_lexemme(lexemme)
-    , type(t_type)
-    , location(t_location) {}
+    Token(std::string_view lexemme, TokenType type, size_t location)
+    : raw_lexemme_(lexemme)
+    , type_(type)
+    , location_(location) {}
 
-    [[nodiscard]] TokenType get_type() const {
-        return type;
+    [[nodiscard]] TokenType GetType() const {
+        return type_;
     }
 
-    [[nodiscard]] std::string_view get_lexemme() const {
-        return raw_lexemme;
+    [[nodiscard]] std::string_view GetLexemme() const {
+        return raw_lexemme_;
     }
 
-    [[nodiscard]] size_t get_location() const {
-        return location;
+    [[nodiscard]] size_t GetLocation() const {
+        return location_;
     }
 
 private:
-    std::string_view raw_lexemme;
-    TokenType type;
-    size_t location;
+    std::string_view raw_lexemme_;
+    TokenType type_;
+    size_t location_;
 };
