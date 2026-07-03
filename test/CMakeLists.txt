@@ -15,11 +15,13 @@ enable_testing()
 add_executable(
   dont_use_script_tests
   lexer/arithmetic_lexer_tests.cpp
+  parser/parser_tests.cpp
 )
 
 target_link_libraries(
   dont_use_script_tests
   lexer
+  parser
   GTest::gtest_main
 )
 
