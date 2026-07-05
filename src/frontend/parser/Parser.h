@@ -1,35 +1,30 @@
 #pragma once
 
-#include <charconv>
 #include <vector>
 #include <memory>
 
-#include "../ast/ast.h"
-#include "../lexer/Lexer.h"
-#include "ParseError.h"
+#include "lexer/Token.h"
+#include "ast/expression/Expression.h"
 
 class Parser {
 public:
-    explicit Parser(std::vector<Token> tokens);
+    Parser(std::vector<Token> tokens);
 
     std::unique_ptr<Expression> Parse();
 
 private:
     std::unique_ptr<Expression> ParseExpression();
-    std::unique_ptr<Expression> ParseAddSub();
-    std::unique_ptr<Expression> ParseMulDiv();
-    std::unique_ptr<Expression> ParsePrimary();
 
-    bool Match(TokenType type);
-    Token Check(TokenType type, const std::string& errorMessage);
-    bool CheckType(TokenType type) const;
-    Token Advance();
-    Token Peek() const;
-    Token Previous() const;
-    bool IsAtEnd() const;
+    std::unique_ptr<Expression> ParsePlusMinus();
+    std::unique_ptr<Expression> ParseMultDiv();
+    
+    std::unique_ptr<Expression> ParseLiteral();
 
-    ParseError Error(const Token& token, const std::string& message) const;
+    bool Match(TokenType type); // eats token if matches
+    bool Check(TokenType type); // doesn't
+
+    bool IsAtEnd();
 
     std::vector<Token> tokens_;
-    size_t current_;
+    size_t current_position_;
 };

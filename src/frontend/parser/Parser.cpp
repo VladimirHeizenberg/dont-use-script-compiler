@@ -1,127 +1,92 @@
 #include "Parser.h"
 
-Parser::Parser(std::vector<Token> tokens) 
-    : tokens_(std::move(tokens)), current_(0) {}
+#include <string>
+
+#include "ParseError.h"
+#include "ast/ast.h"
+
+Parser::Parser(std::vector<Token> tokens)
+: tokens_(std::move(tokens))
+, current_position_(0) {}
 
 std::unique_ptr<Expression> Parser::Parse() {
-    if (IsAtEnd()) {
-        return nullptr;
-    }
-    
-    auto expr = ParseExpression();
-    
-    if (!IsAtEnd() && Peek().GetType() != TokenType::kEof) {
-        throw Error(Peek(), "Unexpected token after expression");
-    }
-    
-    return expr;
+    return ParseExpression();
 }
 
 std::unique_ptr<Expression> Parser::ParseExpression() {
-    return ParseAddSub();
+    return ParsePlusMinus();
 }
 
-std::unique_ptr<Expression> Parser::ParseAddSub() {
-    auto expr = ParseMulDiv();
-
-    while (Match(TokenType::kPlus) || Match(TokenType::kMinus)) {
-        Token operatorToken = Previous();
-        auto right = ParseMulDiv();
-        
-        BinaryExpressionType type = (operatorToken.GetType() == TokenType::kPlus) 
-                                    ? BinaryExpressionType::kPlus 
-                                    : BinaryExpressionType::kMinus;
-        
-        expr = std::make_unique<BinaryExpression>(type, std::move(expr), std::move(right));
-    }
-
-    return expr;
-}
-
-std::unique_ptr<Expression> Parser::ParseMulDiv() {
-    auto expr = ParsePrimary();
-
-    while (Match(TokenType::kAsteriks) || Match(TokenType::kSlash)) {
-        Token operatorToken = Previous();
-        auto right = ParsePrimary();
-        
-        BinaryExpressionType type = (operatorToken.GetType() == TokenType::kAsteriks) 
-                                    ? BinaryExpressionType::kMultiply 
-                                    : BinaryExpressionType::kDivide;
-        
-        expr = std::make_unique<BinaryExpression>(type, std::move(expr), std::move(right));
-    }
-
-    return expr;
-}
-
-std::unique_ptr<Expression> Parser::ParsePrimary() {
-    if (Match(TokenType::kNumber)) {
-        Token numberToken = Previous();
-        int value = 0;
-        auto lexemme = numberToken.GetLexemme();
-        
-        auto [ptr, ec] = std::from_chars(lexemme.data(), lexemme.data() + lexemme.size(), value);
-        if (ec != std::errc()) {
-            throw Error(numberToken, "Invalid number format");
+std::unique_ptr<Expression> Parser::ParsePlusMinus() {
+    std::unique_ptr<Expression> left = ParseMultDiv();
+    while (Check(TokenType::kPlus) || Check(TokenType::kMinus)) {
+        if (Match(TokenType::kPlus)) {
+            std::unique_ptr<Expression> right = ParseMultDiv();
+            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kPlus, std::move(left), std::move(right));
+        } else if (Match(TokenType::kMinus)) {
+            std::unique_ptr<Expression> right = ParseMultDiv();
+            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kMinus, std::move(left), std::move(right));
         }
-        
-        return std::make_unique<ConstExpression>(value);
     }
-
-    if (Match(TokenType::kLeftParenthesis)) {
-        auto expr = ParseExpression();
-        Check(TokenType::kRightParenthesis, "Expected ')' after expression");
-        return expr;
-    }
-
-    throw Error(Peek(), "Expected number or '('");
+    return left;
 }
+
+std::unique_ptr<Expression> Parser::ParseMultDiv() {
+    std::unique_ptr<Expression> left = ParseLiteral();
+    while (Check(TokenType::kAsteriks) || Check(TokenType::kSlash)) {
+        if (Match(TokenType::kAsteriks)) {
+            std::unique_ptr<Expression> right = ParseLiteral();
+            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kMultiply, std::move(left), std::move(right));
+        } else if (Match(TokenType::kSlash)) {
+            std::unique_ptr<Expression> right = ParseLiteral();
+            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kDivide, std::move(left), std::move(right));
+        }
+    }
+    return left;
+}
+
+std::unique_ptr<Expression> Parser::ParseLiteral() {
+    if (Match(TokenType::kLeftParenthesis)) {
+        std::unique_ptr<Expression> inner_expr = ParseExpression();
+        if (!Check(TokenType::kRightParenthesis)) {
+            throw ParseError("unclosed parenthesis");
+        }
+        current_position_++;
+        return inner_expr;
+    }
+    if (Check(TokenType::kNumber)) {
+        try {
+            int num = std::stoi(std::string(tokens_[current_position_].GetLexemme()));
+            std::unique_ptr<Expression> number = std::make_unique<ConstExpression>(num);
+            current_position_++;
+            return number;
+        } catch (std::invalid_argument& e) {
+            throw ParseError("invalid argument");
+        } catch (std::out_of_range& e) {
+            throw ParseError("out of range number");
+        }
+    }
+    throw ParseError("unknown token" + std::to_string(current_position_));
+}
+
 
 bool Parser::Match(TokenType type) {
-    if (CheckType(type)) {
-        Advance();
+    if (Check(type)) {
+        current_position_++;
         return true;
     }
     return false;
 }
 
-Token Parser::Check(TokenType type, const std::string& errorMessage) {
-    if (CheckType(type)) {
-        return Advance();
-    }
-    throw Error(Peek(), errorMessage);
-}
-
-bool Parser::CheckType(TokenType type) const {
+bool Parser::Check(TokenType type) {
     if (IsAtEnd()) return false;
-    return Peek().GetType() == type;
-}
-
-Token Parser::Advance() {
-    if (!IsAtEnd()) current_++;
-    return Previous();
-}
-
-Token Parser::Peek() const {
-    return tokens_[current_];
-}
-
-Token Parser::Previous() const {
-    return tokens_[current_ - 1];
-}
-
-bool Parser::IsAtEnd() const {
-    return Peek().GetType() == TokenType::kEof || current_ >= tokens_.size();
-}
-
-ParseError Parser::Error(const Token& token, const std::string& message) const {
-    std::string full_message = message + ". ";
-    if (token.GetType() == TokenType::kEof) {
-        full_message += "Found EOF at location " + std::to_string(token.GetLocation());
-    } else {
-        full_message += "Found '" + std::string(token.GetLexemme()) + 
-                        "' at location " + std::to_string(token.GetLocation());
+    if (tokens_[current_position_].GetType() == type) {
+        return true;
     }
-    return ParseError(full_message);
+    return false;
+}
+
+bool Parser::IsAtEnd() {
+     return current_position_ >= tokens_.size() || 
+           tokens_[current_position_].GetType() == TokenType::kEof;
 }
