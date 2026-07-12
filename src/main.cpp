@@ -5,7 +5,11 @@
 #include "frontend/executor/ExecutionNodeVisitor.h"
 
 int main() {
-    std::string code = "a = 1 + 234 - 3";
+    std::string code = R"(
+        a = 4;
+        b = 5;
+        c = a + b;
+    )";
     Lexer lexer(code);
     auto res = lexer.Tokenize();
     Parser parser(std::move(res));

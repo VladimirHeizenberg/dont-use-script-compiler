@@ -1,6 +1,7 @@
 #include "Parser.h"
 
 #include <string>
+#include <iostream>
 
 #include "ParseError.h"
 #include "ast/ast.h"
@@ -12,7 +13,7 @@ Parser::Parser(std::vector<Token> tokens)
 std::unique_ptr<Statement> Parser::Parse() {
     std::vector<std::unique_ptr<Statement>> statements;
     while (!IsAtEnd()) {
-        Match(TokenType::kSemicolon);
+        if (Match(TokenType::kSemicolon)) continue;
         statements.push_back(ParseAssign());
     }
     return std::make_unique<ComposeStatement>(std::move(statements));
@@ -23,8 +24,9 @@ std::unique_ptr<Statement> Parser::ParseAssign() {
         throw ParseError("not identifier");
     }
     std::string name = std::string(tokens_[current_position_++].GetLexemme());
+    std::cout << "Parsing now Assign with: " << name << "\n";
     if (!Match(TokenType::kAssign)) {
-        throw ParseError("not assign");
+        throw ParseError("not assign" + std::to_string(current_position_));
     }
     auto expr = ParseExpression();
     return std::make_unique<AssignStatement>(name, std::move(expr));
@@ -82,6 +84,9 @@ std::unique_ptr<Expression> Parser::ParseLiteral() {
         } catch (std::out_of_range& e) {
             throw ParseError("out of range number");
         }
+    }
+    if (Check(TokenType::kIdentifier)) {
+        return std::make_unique<VariableExpression>(std::string(tokens_[current_position_++].GetLexemme()));
     }
     throw ParseError("unknown token" + std::to_string(current_position_));
 }

@@ -39,3 +39,19 @@ TEST(ParserTestSuite, SimpleParserTest3) {
     int result = executor.GetResByName("a");
     ASSERT_EQ(result, 8);
 }
+
+TEST(ParserTestSuite, SimpleParserTest4) {
+    std::string code = R"(
+        a = 4;
+        b = 5;
+        c = a + b;
+    )";
+    Lexer lexer(code);
+    auto res = lexer.Tokenize();
+    Parser parser(std::move(res));
+    auto parse_res = parser.Parse();
+    ExecutionNodeVisitor executor;
+    parse_res->accept(executor);
+    int result = executor.GetResByName("c");
+    ASSERT_EQ(result, 9);
+}
