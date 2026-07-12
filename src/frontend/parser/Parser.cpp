@@ -9,8 +9,20 @@ Parser::Parser(std::vector<Token> tokens)
 : tokens_(std::move(tokens))
 , current_position_(0) {}
 
-std::unique_ptr<Expression> Parser::Parse() {
-    return ParseExpression();
+std::unique_ptr<Statement> Parser::Parse() {
+    return ParseAssign();
+}
+
+std::unique_ptr<Statement> Parser::ParseAssign() {
+    if (!Check(TokenType::kIdentifier)) {
+        throw ParseError("not identifier");
+    }
+    std::string name = std::string(tokens_[current_position_++].GetLexemme());
+    if (!Match(TokenType::kAssign)) {
+        throw ParseError("not assign");
+    }
+    auto expr = ParseExpression();
+    return std::make_unique<AssignStatement>(name, std::move(expr));
 }
 
 std::unique_ptr<Expression> Parser::ParseExpression() {
@@ -22,10 +34,10 @@ std::unique_ptr<Expression> Parser::ParsePlusMinus() {
     while (Check(TokenType::kPlus) || Check(TokenType::kMinus)) {
         if (Match(TokenType::kPlus)) {
             std::unique_ptr<Expression> right = ParseMultDiv();
-            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kPlus, std::move(left), std::move(right));
+            left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), BinaryExpressionType::kPlus);
         } else if (Match(TokenType::kMinus)) {
             std::unique_ptr<Expression> right = ParseMultDiv();
-            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kMinus, std::move(left), std::move(right));
+            left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), BinaryExpressionType::kMinus);
         }
     }
     return left;
@@ -36,10 +48,10 @@ std::unique_ptr<Expression> Parser::ParseMultDiv() {
     while (Check(TokenType::kAsteriks) || Check(TokenType::kSlash)) {
         if (Match(TokenType::kAsteriks)) {
             std::unique_ptr<Expression> right = ParseLiteral();
-            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kMultiply, std::move(left), std::move(right));
+            left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), BinaryExpressionType::kMultiply);
         } else if (Match(TokenType::kSlash)) {
             std::unique_ptr<Expression> right = ParseLiteral();
-            left = std::make_unique<BinaryExpression>(BinaryExpressionType::kDivide, std::move(left), std::move(right));
+            left = std::make_unique<BinaryExpression>(std::move(left), std::move(right), BinaryExpressionType::kDivide);
         }
     }
     return left;

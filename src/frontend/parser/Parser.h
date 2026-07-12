@@ -4,15 +4,17 @@
 #include <memory>
 
 #include "lexer/Token.h"
-#include "ast/expression/Expression.h"
+#include "ast/ast.h"
 
 class Parser {
 public:
     Parser(std::vector<Token> tokens);
 
-    std::unique_ptr<Expression> Parse();
+    std::unique_ptr<Statement> Parse();
 
 private:
+    std::unique_ptr<Statement> ParseAssign();
+
     std::unique_ptr<Expression> ParseExpression();
 
     std::unique_ptr<Expression> ParsePlusMinus();

@@ -22,6 +22,7 @@ target_link_libraries(
   dont_use_script_tests
   lexer
   parser
+  executor
   GTest::gtest_main
 )
 
