@@ -8,6 +8,11 @@ void ExecutionNodeVisitor::visit(ConstExpression& expression) {
 }
 
 
+void ExecutionNodeVisitor::visit(VariableExpression& expression) {
+    stack_.push_back(variables_table_[expression.name]);
+}
+
+
 void ExecutionNodeVisitor::visit(BinaryExpression& expression) {
     expression.left->accept(*this);
     expression.right->accept(*this);
@@ -39,6 +44,12 @@ void ExecutionNodeVisitor::visit(AssignStatement& statement) {
     stack_.pop_back();
 }
 
+
+void ExecutionNodeVisitor::visit(ComposeStatement& statements) {
+    for (auto& statement : statements) {
+        statement->accept(*this);
+    }
+}
 
 int ExecutionNodeVisitor::GetResByName(std::string name) {
     return variables_table_[name];

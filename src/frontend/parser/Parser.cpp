@@ -10,7 +10,12 @@ Parser::Parser(std::vector<Token> tokens)
 , current_position_(0) {}
 
 std::unique_ptr<Statement> Parser::Parse() {
-    return ParseAssign();
+    std::vector<std::unique_ptr<Statement>> statements;
+    while (!IsAtEnd()) {
+        Match(TokenType::kSemicolon);
+        statements.push_back(ParseAssign());
+    }
+    return std::make_unique<ComposeStatement>(std::move(statements));
 }
 
 std::unique_ptr<Statement> Parser::ParseAssign() {

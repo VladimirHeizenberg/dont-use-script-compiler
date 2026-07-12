@@ -44,6 +44,16 @@ struct ConstExpression : public Expression {
 };
 
 
+struct VariableExpression : public Expression {
+    VariableExpression(std::string var_name)
+    : name(std::move(var_name)) {}
+
+    AST_NODE_VISIT
+
+    std::string name;
+};
+
+
 struct BinaryExpression : public Expression {
     BinaryExpression(std::unique_ptr<Expression> l,
                      std::unique_ptr<Expression> r,
@@ -67,7 +77,29 @@ struct AssignStatement : public Statement {
     , right(std::move(expression)) {}
 
     AST_NODE_VISIT
-    
+
     std::string name;
     std::unique_ptr<Expression> right;
+};
+
+
+struct ComposeStatement : public Statement {
+
+    using Statements = std::vector<std::unique_ptr<Statement>>;
+    using StatementsIter = Statements::iterator;
+
+    ComposeStatement(Statements compose)
+    : statements(std::move(compose)) {}
+
+    StatementsIter begin() {
+        return statements.begin();
+    }
+
+    StatementsIter end() {
+        return statements.end();
+    }
+
+    AST_NODE_VISIT
+
+    Statements statements;
 };
