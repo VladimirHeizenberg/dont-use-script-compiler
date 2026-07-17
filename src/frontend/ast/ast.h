@@ -7,7 +7,7 @@
 #include "NodeVisitor.h"
 
 #define AST_NODE_VISIT \
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.Visit(*this); }
 
 
 /* interface */
