@@ -9,12 +9,12 @@
 
 class ExecutionNodeVisitor : public NodeVisitor {
 public:
-    void visit(ConstExpression&) override;
-    void visit(VariableExpression&) override;
-    void visit(BinaryExpression&) override;
+    void Visit(ConstExpression&) override;
+    void Visit(VariableExpression&) override;
+    void Visit(BinaryExpression&) override;
 
-    void visit(AssignStatement&) override;
-    void visit(ComposeStatement&) override;
+    void Visit(AssignStatement&) override;
+    void Visit(ComposeStatement&) override;
 
     int GetResByName(std::string name);
 private:

@@ -3,17 +3,17 @@
 #include "ast/ast.h"
 
 
-void ExecutionNodeVisitor::visit(ConstExpression& expression) {
+void ExecutionNodeVisitor::Visit(ConstExpression& expression) {
     stack_.push_back(expression.value);
 }
 
 
-void ExecutionNodeVisitor::visit(VariableExpression& expression) {
+void ExecutionNodeVisitor::Visit(VariableExpression& expression) {
     stack_.push_back(variables_table_[expression.name]);
 }
 
 
-void ExecutionNodeVisitor::visit(BinaryExpression& expression) {
+void ExecutionNodeVisitor::Visit(BinaryExpression& expression) {
     expression.left->accept(*this);
     expression.right->accept(*this);
     int right_expr_result = stack_.back();
@@ -38,14 +38,14 @@ void ExecutionNodeVisitor::visit(BinaryExpression& expression) {
 }
 
 
-void ExecutionNodeVisitor::visit(AssignStatement& statement) {
+void ExecutionNodeVisitor::Visit(AssignStatement& statement) {
     statement.right->accept(*this);
     variables_table_[statement.name] = stack_.back();
     stack_.pop_back();
 }
 
 
-void ExecutionNodeVisitor::visit(ComposeStatement& statements) {
+void ExecutionNodeVisitor::Visit(ComposeStatement& statements) {
     for (auto& statement : statements) {
         statement->accept(*this);
     }
